@@ -24,6 +24,38 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
    * of the Dart callback because {@link AlarmService} may need to spin up a Flutter execution
    * context before the callback can be invoked.
    */
+   
+  @Override
+  public void onReceive(Context context, Intent intent) {
+    AlarmFlagManager.set(context, intent);
+
+    PowerManager powerManager = (PowerManager)
+      context.getSystemService(Context.POWER_SERVICE);
+    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK |
+      PowerManager.ACQUIRE_CAUSES_WAKEUP |
+      PowerManager.ON_AFTER_RELEASE, "AlarmBroadcastReceiver:My wakelock");
+
+    Intent startIntent = context
+      .getPackageManager()
+      .getLaunchIntentForPackage(context.getPackageName());
+
+    if (startIntent != null)
+      startIntent.setFlags(
+        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |
+          Intent.FLAG_ACTIVITY_NEW_TASK |
+          Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+      );
+
+    wakeLock.acquire(3 * 60 * 1000L /*3 minutes*/);
+    context.startActivity(startIntent);
+    AlarmService.enqueueAlarmProcessing(context, intent);
+    wakeLock.release();
+
+    if (Build.VERSION.SDK_INT < 31)
+      context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+  }
+   
+   
   @Override
   public void onReceive(Context context, Intent intent) {
     AlarmService.enqueueAlarmProcessing(context, intent);
