@@ -56,11 +56,4 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
     if (Build.VERSION.SDK_INT < 31)
       context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
   }
-   
-  /* 
-  @Override
-  public void onReceive(Context context, Intent intent) {
-    AlarmService.enqueueAlarmProcessing(context, intent);
-  }
-  */
 }
